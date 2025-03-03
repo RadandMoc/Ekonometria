@@ -1,0 +1,588 @@
+---
+title: "Projekt Ekonometria"
+author: "Kacper Borys, Mateusz Strojek, Radosław Mocarski, Tomasz Zapart"
+date: "2023-05-28"
+output: html_document
+---
+
+# Opis zmiennych:
+country - kraj którego dana dotyczy
+
+
+year - rok którego dana dotyczy
+
+
+LifeExp - spodziewana długość życia osób urodzonych w tym roku wyrażona w latach, jeżeli nie zmienią się czynniki wpływające na nią
+
+
+sex_ratio - ilość mężczyzn w kraju podzielona przez ilość kobiet w kraju wymnożona przez 100
+
+
+pop_denst - gęstość zaludnienia kraju na km kwadratowy
+
+
+freedix - współczynnik wolności politycznej i wolności obywatelskich w skali od 1 do 7, przy czym 1 to kraje najbardziej wolne.
+
+
+myisw - średnia lat w szkole kobiet w wieku 15-24lat
+
+
+myism - średnia lat w szkole mężczyzn w wieku 15-24lat
+agricultural - procent powierzchni kraju przeznaczonego dla rolnictwa
+
+
+myis - średnia z myism i myisw
+
+
+GDP_per_capita - Średnie PKB (uzyskane w ciągu danego roku) przypadające na mieszkańca kraju, z uwzględnioną inflacją
+
+# Wczytujemy wybrane pliki csv:
+```{r}
+library(dplyr)
+library(ggplot2)
+
+zbir1 <- read.csv("sex_ratio_all_age_groups.csv", sep=",")
+zbir2 <- read.csv("population_density_per_square_km.csv", sep=",")
+zbir3 <- read.csv("freedix_fh.csv", sep=",")
+zbir4 <- read.csv("mean_years_in_school_women_15_to_24_years.csv", sep=",")
+zbir5 <- read.csv("mean_years_in_school_men_15_to_24_years.csv", sep=",")
+zbir7 <- read.csv("life_expectancy_years.csv", sep=",")
+zbir8 <- read.csv("agricultural_land_percent_of_land_area.csv", sep=",")
+zbir9 <- read.csv("income_per_person_gdppercapita_ppp_inflation_adjusted.csv", sep=",")
+
+```
+
+
+
+# Układamy te dane w kolejności alfabetycznej względem krajów:
+
+```{r}
+zbir1 <- zbir1 %>%
+  arrange(country)
+zbir2 <- zbir2 %>%
+  arrange(country)
+zbir3 <- zbir3 %>%
+  arrange(country)
+zbir4 <- zbir4 %>%
+  arrange(country)
+zbir5 <- zbir5 %>%
+  arrange(country)
+zbir7 <- zbir7 %>%
+  arrange(country)
+zbir8 <- zbir8 %>%
+  arrange(country)
+zbir9 <- zbir9 %>%
+  arrange(country)
+
+```
+
+
+# Tworzymy kolejne zbiory do których przypisujemy kraje, a następnie wyznaczamy dla wektora ‘kraiki’ kraje, które są we wszystkich plikach (csv):
+
+```{r}
+zbior1 <- zbir1[,1]
+zbior2 <- zbir2[,1]
+zbior3 <- zbir3[,1]
+zbior4 <- zbir4[,1]
+zbior5 <- zbir5[,1]
+zbior7 <- zbir7[,1]
+zbior8 <- zbir8[,1]
+zbior9 <- zbir9[,1]
+kraiki <- intersect(zbior1,zbior2)
+kraiki <- intersect(kraiki,zbior3)
+kraiki <- intersect(kraiki,zbior4)
+kraiki <- intersect(kraiki,zbior5)
+kraiki <- intersect(kraiki,zbior7)
+kraiki <- intersect(kraiki,zbior8)
+kraiki <- intersect(kraiki,zbior9)
+
+```
+
+
+# Tworzymy dla tych plików wektor logiczny, którego długość odpowiada ilości krajów odpowiadającemu mu pliku. Wektory te zawierają wartość TRUE jeżeli dany kraj jest w części współnej i FALSE jeśli dany kraj się w części wspólnej nie znajduje:
+
+```{r}
+zbiorek1 <- data.frame(country=zbior1) %>%
+  arrange(country)
+zbiorek1 <- zbiorek1 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek1$country))
+{
+  if(is.element(zbiorek1$country[i],kraiki))
+  {
+    zbiorek1$prawda[i]=T
+    next
+  }
+}
+zbiorek2 <- data.frame(country=zbior2) %>%
+  arrange(country)
+zbiorek2 <- zbiorek2 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek2$country))
+{
+  if(is.element(zbiorek2$country[i],kraiki))
+  {
+    zbiorek2$prawda[i]=T
+    next
+  }
+}
+zbiorek3 <- data.frame(country=zbior3) %>%
+  arrange(country)
+zbiorek3 <- zbiorek3 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek3$country))
+{
+  if(is.element(zbiorek3$country[i],kraiki))
+  {
+    zbiorek3$prawda[i]=T
+    next
+  }
+}
+zbiorek4 <- data.frame(country=zbior4) %>%
+  arrange(country)
+zbiorek4 <- zbiorek4 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek4$country))
+{
+  if(is.element(zbiorek4$country[i],kraiki))
+  {
+    zbiorek4$prawda[i]=T
+    next
+  }
+}
+zbiorek5 <- data.frame(country=zbior5) %>%
+  arrange(country)
+zbiorek5 <- zbiorek5 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek5$country))
+{
+  if(is.element(zbiorek5$country[i],kraiki))
+  {
+    zbiorek5$prawda[i]=T
+    next
+  }
+}
+zbiorek7 <- data.frame(country=zbior7) %>%
+  arrange(country)
+zbiorek7 <- zbiorek7 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek7$country))
+{
+  if(is.element(zbiorek7$country[i],kraiki))
+  {
+    zbiorek7$prawda[i]=T
+    next
+  }
+}
+zbiorek8 <- data.frame(country=zbior8) %>%
+  arrange(country)
+zbiorek8 <- zbiorek8 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek8$country))
+{
+  if(is.element(zbiorek8$country[i],kraiki))
+  {
+    zbiorek8$prawda[i]=T
+    next
+  }
+}
+zbiorek9 <- data.frame(country=zbior9) %>%
+  arrange(country)
+zbiorek9 <- zbiorek9 %>%
+  mutate(prawda = F)
+for (i in 1:length(zbiorek9$country))
+{
+  if(is.element(zbiorek9$country[i],kraiki))
+  {
+    zbiorek9$prawda[i]=T
+    next
+  }
+}
+
+```
+
+# Wybieramy lata z zakresu 1972-2014 oraz kraje z wektorów robionych wyżej, po czym przekształcamy niektóre dane żeby zamienić k na 1000:
+
+```{r}
+zbir1 <- zbir1[zbiorek1$prawda,24:66]
+zbir2 <- zbir2[zbiorek2$prawda,24:66]
+zbir3 <- zbir3[zbiorek3$prawda,2:44]
+zbir4 <- zbir4[zbiorek4$prawda,4:46]
+zbir5 <- zbir5[zbiorek5$prawda,4:46]
+zbir7 <- zbir7[zbiorek7$prawda,174:216]
+zbir8 <- zbir8[zbiorek8$prawda,13:55]
+zbir9 <- zbir9[zbiorek9$prawda,174:216]
+for (i in 1:186) {
+  zbir2[i,] <- as.numeric(sub("k", "e3", zbir2[i,], fixed = TRUE))
+}
+for (i in 1:186) {
+  zbir9[i,] <- as.numeric(sub("k", "e3", zbir9[i,], fixed = TRUE))
+}
+
+```
+
+
+# Tworzymy wektor który posiada co trzeci rok w zakresie 1972-2014 a następnie powtarza je tyle razy ile jest różnych krajów. Tworzymy także wektor zawierający 15 razy nazy krajów z części wspólnej:
+
+```{r}
+lata <- c(1972,1975,1978,1981,1984,1987,1990,1993,1996,1999,2002,2005,2008,2011,2014)
+lata186 <- lata
+for (i in 1:185) {
+  lata186 <- c(lata186,lata)
+}
+l_lat <- c(kraiki)
+for (i in 1:14) {
+  l_lat <- c(l_lat,kraiki)
+}
+```
+
+# Robimy ramkę danych zawierającą powtarzane kraje a następnie układamy ją w kolejności alfabetycznej. Po czym przypisujemy do niej powtarzane lata. Dzięki temu że mamy 15 razy ten sam kraj pod rząd i po 15 różnych lat poukładanych w sposób regularny, po połączeniu powstaje każdy kraj z każdym rokiem:
+
+```{r}
+moje_dane<- data.frame(country=l_lat) %>%
+  arrange(country)
+moje_dane <- moje_dane %>%
+  mutate(year=lata186)
+
+```
+
+
+# Następnie tworzymy kolumny na kolejne dane i je przypisujemy:
+
+```{r}
+moje_dane <- moje_dane %>%
+  mutate(LifeExp = "") %>%
+  arrange(year,country)
+moje_dane$LifeExp <- c(zbir7$X1972,zbir7$X1975,zbir7$X1978,zbir7$X1981,zbir7$X1984,zbir7$X1987,zbir7$X1990,zbir7$X1993,zbir7$X1996,zbir7$X1999,zbir7$X2002,zbir7$X2005,zbir7$X2008,zbir7$X2011,zbir7$X2014)
+moje_dane <- moje_dane %>%
+  mutate(sex_ratio = "")
+moje_dane$sex_ratio <- c(zbir1$X1972,zbir1$X1975,zbir1$X1978,zbir1$X1981,zbir1$X1984,zbir1$X1987,zbir1$X1990,zbir1$X1993,zbir1$X1996,zbir1$X1999,zbir1$X2002,zbir1$X2005,zbir1$X2008,zbir1$X2011,zbir1$X2014)
+moje_dane <- moje_dane %>%
+  mutate(pop_denst = "")
+moje_dane$pop_denst <- as.numeric(c(zbir2$X1972,zbir2$X1975,zbir2$X1978,zbir2$X1981,zbir2$X1984,zbir2$X1987,zbir2$X1990,zbir2$X1993,zbir2$X1996,zbir2$X1999,zbir2$X2002,zbir2$X2005,zbir2$X2008,zbir2$X2011,zbir2$X2014))
+moje_dane <- moje_dane %>%
+  mutate(freedix = "")
+moje_dane$freedix <- c(zbir3$X1972,zbir3$X1975,zbir3$X1978,zbir3$X1981,zbir3$X1984,zbir3$X1987,zbir3$X1990,zbir3$X1993,zbir3$X1996,zbir3$X1999,zbir3$X2002,zbir3$X2005,zbir3$X2008,zbir3$X2011,zbir3$X2014)
+moje_dane <- moje_dane %>%
+  mutate(myisw = "")
+moje_dane$myisw <- c(zbir4$X1972,zbir4$X1975,zbir4$X1978,zbir4$X1981,zbir4$X1984,zbir4$X1987,zbir4$X1990,zbir4$X1993,zbir4$X1996,zbir4$X1999,zbir4$X2002,zbir4$X2005,zbir4$X2008,zbir4$X2011,zbir4$X2014)
+moje_dane <- moje_dane %>%
+  mutate(myism = "")
+moje_dane$myism <- c(zbir5$X1972,zbir5$X1975,zbir5$X1978,zbir5$X1981,zbir5$X1984,zbir5$X1987,zbir5$X1990,zbir5$X1993,zbir5$X1996,zbir5$X1999,zbir5$X2002,zbir5$X2005,zbir5$X2008,zbir5$X2011,zbir5$X2014)
+moje_dane <- moje_dane %>%
+  mutate(agricultural = "")
+moje_dane$agricultural <- c(zbir8$X1972,zbir8$X1975,zbir8$X1978,zbir8$X1981,zbir8$X1984,zbir8$X1987,zbir8$X1990,zbir8$X1993,zbir8$X1996,zbir8$X1999,zbir8$X2002,zbir8$X2005,zbir8$X2008,zbir8$X2011,zbir8$X2014)
+moje_dane <- moje_dane %>%
+  mutate(GDP_per_capita = "")
+moje_dane$GDP_per_capita <- as.numeric(c(zbir9$X1972,zbir9$X1975,zbir9$X1978,zbir9$X1981,zbir9$X1984,zbir9$X1987,zbir9$X1990,zbir9$X1993,zbir9$X1996,zbir9$X1999,zbir9$X2002,zbir9$X2005,zbir9$X2008,zbir9$X2011,zbir9$X2014))
+
+```
+
+# Następnie sprawdzamy, czy jest jakaś dana pusta, a jeżeli tak, to czy jej kraj nie znajduje się w wektorze “usuwacz”, jeśli tak, to dodajemy dany kraj do wektora “usuwacz”:
+
+```{r}
+usuwacz <- c()
+for (i in 1:length(moje_dane$year)) 
+{
+  if ((is.element(moje_dane$freedix[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$myisw[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$myism[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$sex_ratio[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$pop_denst[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$agricultural[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+  else if ((is.element(moje_dane$GDP_per_capita[i],NA)==T)&(is.element(moje_dane$country[i],usuwacz)==F)){usuwacz <- c(usuwacz,moje_dane$country[i])}
+}
+
+```
+
+# Następnie usuwamy z ramki danych kraje, w których wykryto brak jakiejś danej:
+
+```{r}
+pomocnicza=1
+for (i in 1:length(moje_dane$country)) {
+  if (is.element(moje_dane$country[pomocnicza],usuwacz)==TRUE)
+  {
+    moje_dane<-moje_dane[-pomocnicza,]
+    pomocnicza<-pomocnicza-1
+  }
+  pomocnicza<-pomocnicza+1
+}
+# Tutaj można zobaczyć wszystkie dane (ale przez ich ilość okomentowałem to)
+#moje_dane
+```
+
+# Tworzymy średnią ilośc lat w szkole dla kobiet i mężczyzn
+
+```{r}
+moje_dane$myis <- (moje_dane$myism + moje_dane$myisw)/2
+moje_dane <- moje_dane[,-c(7,8)]
+```
+
+
+# Dzielimy zbiór na testowy i treningowy
+
+```{r}
+set.seed(100)
+
+kraje <- moje_dane[,1:2] %>%
+  group_by(country) %>%
+  summarise(year = mean(year))
+  
+krajetreningowe <- kraje %>%
+  slice_sample(prop=0.8)
+
+krajetestowe <- setdiff(kraje, krajetreningowe)
+
+train <- moje_dane %>%
+  inner_join(krajetreningowe, by = "country")
+
+test <- moje_dane %>%
+  inner_join(krajetestowe, by = "country")
+
+rownames(train) <- 1:nrow(train)
+```
+
+# Wybieramy najlepszą kombinacje zmiennych za pomocą metody Hellwiga 
+
+Metoda Hellwiga  jest jednym z metod selekcji zmiennych w modelach statystycznych, szczególnie popularnym w ekonometrii i statystyce. Metoda ta została stworzona przez polskiego ekonometryka, prof. Jana Hellwiga.
+
+Jeżeli mamy m potencjalnych zmiennych objaśniających, to liczba wszystkich kombinacji jest równa:
+
+L=2^m-1
+
+
+
+# Postępowanie
+
+1. Tworzymy macierz korelacji między zmiennymi w zbiorze danych train, biorąc pod uwagę tylko kolumny od 3 do 9.
+
+2. Tworzymy wektory Ry i Rx, które zawierają korelacje między zmienną zależną (pierwsza kolumna w cor_matrix) i pozostałymi zmiennymi (kolumny 2-7 w cor_matrix). Ry to korelacje między zmienną zależną a zmiennymi niezależnymi, a Rx to korelacje między zmiennymi niezależnymi.
+
+3. Tworzymy siatkę kombinacji dla sześciu zmiennych niezależnych, reprezentujących wszystkie możliwe kombinacje tych zmiennych (czy jest uwzględniana w modelu, czy nie). Każdy wiersz w comb reprezentuje jedną taką kombinację.
+
+4. Dla każdej kombinacji zmiennych obliczamy wynik, który jest sumą kwadratów korelacji między zmienną zależną a zmienną niezależną podzieloną przez sumę absolutnych wartości korelacji między zmienną niezależną a innymi zmiennymi w kombinacji, zgodnie z metodą Hellwiga.
+
+5. Jeśli wynik dla danej kombinacji zmiennych jest większy niż dotychczasowy największy wynik, zapisuje ten wynik i kombinację zmiennych jako nowe maksimum.
+
+6. Na koniec, K_max zawiera kombinację zmiennych, która dała największy wynik, co sugeruje, że te zmienne powinny być uwzględnione w modelu. 
+
+
+```{r}
+m <- 6
+2^m - 1
+
+cor_matrix <-cor(train[,c(3:9)])
+
+Ry <- cor_matrix[-1,1]
+
+Rx <- cor_matrix[-1,-1]
+
+comb <- expand.grid(rep(list(c(T,F)), m))
+
+
+Max <- 0
+K_max <- NULL
+a <- c()
+#duża pętla po wierszach comb
+for(i in 1:nrow(comb)-1) {
+  k <- c(1:6)[unlist(comb[i,])]
+  wynik <- 0
+  #pętla po zmiennych w kombinacji
+  for(n in k){
+    wynik <- wynik + Ry[n]^2/sum(abs(Rx[n,k]))
+  }
+  if(wynik>Max)
+  {
+    Max <- wynik
+    K_max <- k
+  }
+}
+
+
+```
+
+Najlepsza kombinacja jest dla zmiennych freeidx, myis i GDP
+
+
+# Tworzymy model ze zmiennych, które przechowują największa pojemność informacyjną. 
+
+logarytmujemy GDP, aby zależność między PKB na osobę, a  oczekiwaną długością życia, miała postać liniową.   
+
+```{r}
+model <- lm(LifeExp ~ freedix + myis + log(GDP_per_capita),train[-c(5,130, 140,232),])
+
+```
+
+# Tworzymy wykres przedstawiający korelację między zmiennymi
+
+```{r}
+data <- train[,c(6,8,9)]
+library(corrplot)
+corrplot(cor(data))
+```
+
+korelacja występuje choć nie jest ona na wysokim poziomie.
+
+# Testujemy normalność reszt za pomocą testu shapiro-wilka
+
+```{r}
+shapiro.test(model$residuals)
+```
+# test jarque-bera
+
+```{r}
+library(tseries)
+
+jarque.bera.test(model$residuals)
+```
+
+
+```{r}
+hist(model$residuals)
+
+```
+
+Błędy szacunku nie pochodzą z rozkładu normalnego, oba testy odrzuciły h0 o normalności rozkładu. Na ten rezultat wpływ może mieć wiele czynników. Jednym z nich jest heteroskadastyczność modelu, którą za chwile zaprezentujemy. Wariancja reszt nie jest stała, zmienia się w zależności od wartości zmiennych niezależnych, może to prowadzić do nienormalności reszt. Nie wykluczone jest to iż model posiada niewłaściwą specyfikację, model liniowy wyestymowany za pomocą MNK, może być niedopasowany do danych. Występuje wiele wartości odstających, dlatego skośność lewostronną.
+
+
+# Autokorelacja
+
+```{r}
+library(lmtest)
+dwtest(model)
+```
+Nasz model nie spełnia założeń testu DURBINA-WATSONA
+(Założenia dla testu Durbina-Watsona:
+- model ekonometryczny posiada wyraz wolny,
+- składnik losowy ma rozkład normalny,
+- w modelu nie występuje opóźniona zmienna objaśniana jako zmienna objaśniająca). Jednak pomijając tą niezgodność wyliczyliśmy test DURBINA-WATSONA, który nie odrzucił H0, czyli autokorelacja jest statystycznie nieistotna. 
+
+# Współliniowość
+
+Współliniowość to sytuacja, w której dwie lub więcej zmiennych niezależnych w modelu statystycznym są silnie skorelowane ze sobą. W takim przypadku, trudno jest określić, jak każda z tych zmiennych indywidualnie wpływa na zmienną zależną, ponieważ zmiany w jednej z nich są zazwyczaj związane ze zmianami w innych.
+
+Wysoka współliniowość może prowadzić do różnych problemów w modelowaniu statystycznym, w tym:
+
+1. Niemożność jednoznacznego ustalenia wpływu poszczególnych zmiennych na zmienną zależną.
+
+2. Zwiększenie wariancji estymacji współczynników regresji, co prowadzi do mniej stabilnych i mniej wiarygodnych wyników.
+
+3. Problem interpretacji wyników modelu, ze względu na trudność w oddzielaniu efektów poszczególnych zmiennych.
+
+Zasada ogólna mówi, że jeśli VIF przekracza 5 lub 10, to współliniowość może być problemem. W takim przypadku, możemy zdecydować się na usunięcie jednej lub więcej zmiennych, które są silnie skorelowane.
+
+
+```{r}
+library(car)
+vif(model)
+```
+
+Żadna wartość nie przekracza wartości 5, zatem nie usuwamy zmiennych.
+
+# Heteroskedastyczność
+
+Heteroskedastyczność odnosi się do sytuacji, w której wariancja błędu w modelu regresji nie jest stała na wszystkich poziomach zmiennej niezależnej lub na przestrzeni czasu (w przypadku danych szeregów czasowych). Heteroskedastyczność występuje, gdy wariancja błędu zależy od jednej lub więcej zmiennych.
+
+W celu wykrycia heteroskedastyczności można użyć szeregów testów, takich jak test White'a, test Breusch-Pagan, czy test Goldfeld-Quandt.
+
+```{r}
+bptest(model)
+```
+test Breusch-Pagan odrzucił hipoteze h0 o homoskedastyczności, zatem występuje w naszym modelu heterostkedastyczność
+
+Heteroskedastyczność może mieć różne przyczyny. Oto kilka z nich:
+
+Niewłaściwa Specyfikacja Modelu: Jeśli model jest niewłaściwie określony, na przykład jeśli pominięto istotną zmienną zależną lub jeśli zmienna zależna ma niewłaściwą formę funkcjonalną (na przykład powinna być logarytmiczna, ale jest liniowa), model może wykazywać heteroskedastyczność.
+
+Skala Danych: Często, w danych o dużej skali, różnice (i tym samym wariancje) mogą naturalnie rosnąć wraz ze wzrostem wartości zmiennych. Na przykład, dochody domostw mogą wykazywać heteroskedastyczność, ponieważ różnice między dochodami są większe dla domostw o wyższych dochodach.
+
+Efekty Grupowe: Jeśli dane są grupowane (na przykład dane z różnych krajów lub regionów), różne grupy mogą mieć różną wariancję.
+
+Outliery lub Ekstremalne Wartości: Outliery, czyli wartości, które znacznie odbiegają od innych obserwacji, mogą wprowadzać heteroskedastyczność do modelu.
+
+
+W naszym wypadku prawdopodobnymi czynnikami, które spowodowały heteroskedastyczność są:
+
+1. niewłaściwa specyfikacja modelu - model nie powinien być liniowy 
+2. outliery lub ekstremalne wartości - w naszych danych jesteśmy w stanie zaobserwować wartości odbiegające od normy.
+
+
+Nasz model można byłoby poprawić w nastepujący sposób:
+
+
+
+
+# Test Chowa 
+
+Test Chow'a to statystyczny test używany do sprawdzenia, czy parametry modelu regresji różnią się pomiędzy dwiema lub więcej grupami. Test ten jest często używany w ekonometrii do sprawdzenia stabilności parametrów modelu na przestrzeni czasu - na przykład, czy współczynniki regresji w modelu różnią się przed i po jakimś istotnym wydarzeniu.
+
+Do przeprowadzenia tego testu zrobiliśmy następujące kroki:
+
+1. Ładujemy konieczną bibliotekę strucchange
+2. Obliczamy medianę dla kolumny "GDP_per_capita" w zbiorze danych "train", w celu podzielenia danych na grupy.
+3. Tworzymy nową kolumnę "group" w zbiorze danych "train", która kategoryzuje obserwacje na podstawie porównania wartości "GDP_per_capita" z medianą. Jeśli "GDP_per_capita" jest większe niż mediana, obserwacja jest przypisywana do grupy "High". W przeciwnym razie jest przypisywana do grupy "Low".
+4. Tworzymy dwa modele opisujące zmienną zależną LifeExp opisywaną przez zmienne freedix, myis, log(GDP_per_capita) w zależności od tego czy kraj znalazł się w grupie "High" dla wysokiego GDP i "Low" dla niskiego. 
+5. Ostatecznie, wykorzystujemy funkcję "sctest" z biblioteki "strucchange", aby przeprowadzić test Chow'a, który sprawdza, czy parametry modelu regresji różnią się między grupami "High" i "Low".
+
+
+```{r}
+library(strucchange)
+median_GDP <- median(train$GDP_per_capita)
+train$group <- ifelse(train$GDP_per_capita > median_GDP, "High", "Low")
+modelchow <- lm(LifeExp ~ (freedix + myis + log(GDP_per_capita))*group, data = train)
+sctest(modelchow, type = "Chow")
+```
+
+Test chowa odrzucił h0 o stabilności parametrów modelu, model jest niestabilny.
+
+Potencjalną przyczyną niestabilności modelu może być:
+1. Nieadekwatna specyfikacja modelu: model nie powinien być liniowy
+
+
+2. Naruszenie założeń modelu: Jeśli założenia modelu, takie jak homoskedastyczność, normalność reszt, czy brak autokorelacji, nie są spełnione, parametry modelu mogą być niestabilne. W naszym wypadku nie wyszła heteroskedastyczność i normalność reszt, co mogło mieć wpływ na stabilność modelu. 
+
+
+
+# Prognoza Ex Post
+
+```{r}
+predykcja <- predict(model, newdata = test)
+error <- test$LifeExp - predykcja
+MAE <- mean(abs(error))
+MAE
+MAPE <- mean(abs(error/test$LifeExp))
+MAPE
+RMSE <- sqrt(mean(error^2))
+RMSE
+```
+
+Średni błąd bezwzględny (MAE) wynosi 3.32 co oznacza, że nasz model pomylił się dla tych krajów średnio o 3.32 w przewidywanej długości życia.
+
+Średni procentowy błąd bezwzględny (MAPE) wynosi 0.055 (5.5%).
+
+Średnią kwadratowa różnica między przewidywanymi wartościami a rzeczywistymi wartościami wynosi u nas 4.28
+
+# Interpretacja 
+
+RMSE>MAE to znaczy, że w naszych danych są wartości odstające, do których nasz model słabo dopasowuje się do danych. W naszych danych występują tzw. outliery.
+
+# Model
+
+lifeexp = 24.7745-0.3915freedix+1.3608myis+3.7282log(GDP_per_capita)
+
+# Interpreatacja modelu
+
+zmiana o jedną jednostkę indeksu wolności spowoduje spadek oczekiwanej długości życia o 0.39 lat
+
+zmiana o jeden rok łącznej liczby lat spędzonych w szkole   w wieku od 15-24 lat spowoduje wzrost oczekiwanej długości życia o 1.3608 lat.
+
+zmiana o 1% PKB per capita spowoduje wzrost oczekiwanej długości życia o 3.7282%
+
+Łatwo zauważyć, że nasz model jest wadliwy, gdyż istnieje heteroskedastyczność, reszty modelu nie pochodzą z rozkładu normalnego, model jest niestabilny, zatem powyższa interpretacja, może być nietrafna 
+
+
+
+
+
+
+
